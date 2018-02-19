@@ -1,21 +1,21 @@
-FROM debian:jessie
+FROM alpine
 
-MAINTAINER Valentino Lauciani <valentino.lauciani@ingv.it>
+LABEL maintainer="Valentino Lauciani <valentino.lauciani@ingv.it>"
 
 ENV DEBIAN_FRONTEND=noninteractive
 ENV INITRD No
 ENV FAKE_CHROOT 1
 
-RUN apt-get update \
-    && apt-get dist-upgrade -y --no-install-recommends \
-    && apt-get install -y \
-        build-essential \
-        vim \
+RUN apk add --no-cache \
+	procps \
+	sudo \
+	bash \
+	openssh-client \
 	git \
-	telnet \
-        dnsutils \
-        wget \
-	default-jre
+	ttf-dejavu \
+	openjdk8-jre \
+	vim \
+	wget
 
 # Set .bashrc
 RUN echo "" >> /root/.bashrc \
