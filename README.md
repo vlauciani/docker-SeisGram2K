@@ -9,7 +9,7 @@ More info here:
 
 ### Build docker
 ```
-$ git clone git@gitlab.rm.ingv.it:uf/SeisGram2K.git
+$ git clone git@gitlab.rm.ingv.it:docker/SeisGram2K.git
 $ cd SeisGram2K
 $ docker build --tag seisgram2k70 . 
 ```
