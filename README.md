@@ -21,7 +21,13 @@ Download and install **XQuartz**:
 
 Enable flag: **Preferences** -> **Security** -> **Allow connections from network clients**.
 
-#### Docker
+#### Quick Run
+Using the bash script `runSeisGram2KInDocker.sh` all steps are automatic:
+```
+$ ./runSeisGram2KInDocker.sh
+```
+
+#### Run by your sel
 Get your IP address and use it to start docker below:
 ```
 $ ifconfig | grep "inet"
