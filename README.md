@@ -1,4 +1,4 @@
-# docker_SeisGram2K
+# SeisGram2K
 
 SeisGram2K in a Docker container
 
@@ -9,8 +9,8 @@ More info here:
 
 ### Build docker
 ```
-$ git clone git@gitlab.rm.ingv.it:uf/docker_SeisGram2K.git
-$ cd docker_SeisGram2K
+$ git clone git@gitlab.rm.ingv.it:uf/SeisGram2K.git
+$ cd SeisGram2K
 $ docker build --tag seisgram2k70 . 
 ```
 
