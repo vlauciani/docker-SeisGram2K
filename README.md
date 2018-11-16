@@ -27,7 +27,7 @@ Using the bash script `runSeisGram2KInDocker.sh` all steps are automatic:
 $ ./runSeisGram2KInDocker.sh
 ```
 
-#### Run by your sel
+#### Run by your self
 Get your IP address and use it to start docker below:
 ```
 $ ifconfig | grep "inet"
