@@ -47,9 +47,25 @@ open XQuartz App and start docker:
 $ docker run -it --rm -e DISPLAY=<your_ip_address>:0 -v /tmp/.X11-unix:/tmp/.X11-unix seisgram2k70
 ```
 
-Check **SeisGram2K** version:
+### Example
+#### Quick run
+SeisGram2k version:
+```
+$ ./runSeisGram2KInDocker.sh -version
+```
+View streams:
+```
+$ ./runSeisGram2KInDocker.sh -seedlink=discovery.ingv.it:39962#IV_PTRJ:HH?
+```
+
+#### Run by your self
+SeisGram2k version:
 ```
 $ docker run -it --rm -e DISPLAY=<your_ip_address>:0 -v /tmp/.X11-unix:/tmp/.X11-unix seisgram2k70 -version
+```
+View streams:
+```
+$ docker run -it --rm -e DISPLAY=<your_ip_address>:0 -v /tmp/.X11-unix:/tmp/.X11-unix seisgram2k70 -seedlink=discovery.ingv.it:39962#IV_PTRJ:HH?
 ```
 
 ### Run docker (Linux)
