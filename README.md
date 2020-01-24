@@ -52,6 +52,11 @@ Check **SeisGram2K** version:
 $ docker run -it --rm -e DISPLAY=<your_ip_address>:0 -v /tmp/.X11-unix:/tmp/.X11-unix seisgram2k70 -version
 ```
 
+Example:
+```
+$ docker run -it --rm -e DISPLAY=<your_ip_address>:0 -v /tmp/.X11-unix:/tmp/.X11-unix seisgram2k70 -seedlink=eidaws.ingv.it:18000#IV_ACER:HH?
+```
+
 ### Run docker (Linux)
 (under development)
 
