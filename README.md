@@ -14,20 +14,20 @@ $ cd SeisGram2K
 $ docker build --tag seisgram2k70 . 
 ```
 
-### Run docker (Mac OSX)
-#### XQuartz
+## Run docker (Mac OSX)
+### XQuartz
 Download and install **XQuartz**:
 - https://www.xquartz.org
 
 Enable flag: **Preferences** -> **Security** -> **Allow connections from network clients**.
 
-#### Quick Run
+### Quick Run
 Using the bash script `runSeisGram2KInDocker.sh` all steps are automatic:
 ```
 $ ./runSeisGram2KInDocker.sh
 ```
 
-#### Run by your self
+### Run by your self
 Get your IP address and use it to start docker below:
 ```
 $ ifconfig | grep "inet"
@@ -47,18 +47,29 @@ open XQuartz App and start docker:
 $ docker run -it --rm -e DISPLAY=<your_ip_address>:0 -v /tmp/.X11-unix:/tmp/.X11-unix seisgram2k70
 ```
 
-Check **SeisGram2K** version:
+## Run docker (Linux)
+(under development)
+
+## Example
+### Quick run
+SeisGram2k version:
+```
+$ ./runSeisGram2KInDocker.sh -version
+```
+View streams:
+```
+$ ./runSeisGram2KInDocker.sh -seedlink=discovery.ingv.it:39962#IV_PTRJ:HH?
+```
+
+### Run by your self
+SeisGram2k version:
 ```
 $ docker run -it --rm -e DISPLAY=<your_ip_address>:0 -v /tmp/.X11-unix:/tmp/.X11-unix seisgram2k70 -version
 ```
-
-Example:
+View seedlink streams:
 ```
-$ docker run -it --rm -e DISPLAY=<your_ip_address>:0 -v /tmp/.X11-unix:/tmp/.X11-unix seisgram2k70 -seedlink=eidaws.ingv.it:18000#IV_ACER:HH?
+$ docker run -it --rm -e DISPLAY=<your_ip_address>:0 -v /tmp/.X11-unix:/tmp/.X11-unix seisgram2k70 -seedlink=discovery.ingv.it:39962#IV_PTRJ:HH?
 ```
-
-### Run docker (Linux)
-(under development)
 
 # Contribute
 Please, feel free to contribute.
