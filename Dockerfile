@@ -15,7 +15,8 @@ RUN apk add --no-cache \
 	ttf-dejavu \
 	openjdk8-jre \
 	vim \
-	wget
+	wget \
+	xterm
 
 # Set .bashrc
 RUN echo "" >> /root/.bashrc \
@@ -27,6 +28,7 @@ WORKDIR /opt
 RUN wget "http://alomax.free.fr/seisgram/beta/SeisGram2K70.jar" \
      && chmod +x /opt/SeisGram2K70.jar 
 
+COPY ./test.sh /opt/
 ENV CLASSPATH=/opt/SeisGram2K70.jar
 
 ENTRYPOINT ["java", "net.alomax.seisgram2k.SeisGram2K"]

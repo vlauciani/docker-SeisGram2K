@@ -1,3 +1,23 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
+
+- [SeisGram2K](#seisgram2k)
+  - [Quickstart](#quickstart)
+    - [Build docker](#build-docker)
+  - [Run docker (Mac OSX)](#run-docker-mac-osx)
+    - [XQuartz](#xquartz)
+    - [Quick Run](#quick-run)
+    - [Run by your self](#run-by-your-self)
+  - [Run docker (Linux)](#run-docker-linux)
+  - [Example](#example)
+    - [Quick run](#quick-run)
+    - [Run by your self](#run-by-your-self-1)
+- [Contribute](#contribute)
+- [Credit](#credit)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 # SeisGram2K
 
 SeisGram2K in a Docker container
@@ -48,6 +68,14 @@ $ docker run -it --rm -e DISPLAY=<your_ip_address>:0 -v /tmp/.X11-unix:/tmp/.X11
 ```
 
 ## Run docker (Linux)
+show waveform for station `psca` with a `window-length` of one day (72000 seconds), showing `backfill` data:
+
+```
+$ docker run -it --rm --net host -e DISPLAY seisgram2k70 -seedlink=10.140.1.14:18000#ZZ_psca:UTZ#72000 --seedlink.backfill=YES
+```
+
+see [here](http://alomax.free.fr/seisgram/ver70/SeisGram2KHelp.html) for a detailed list of launch parameters
+
 (under development)
 
 ## Example
@@ -62,6 +90,7 @@ $ ./runSeisGram2KInDocker.sh -seedlink=discovery.ingv.it:39962#IV_PTRJ:HH?
 ```
 
 ### Run by your self
+
 SeisGram2k version:
 ```
 $ docker run -it --rm -e DISPLAY=<your_ip_address>:0 -v /tmp/.X11-unix:/tmp/.X11-unix seisgram2k70 -version
