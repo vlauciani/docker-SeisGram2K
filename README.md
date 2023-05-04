@@ -76,8 +76,6 @@ $ docker run -it --rm --net host -e DISPLAY seisgram2k70 -seedlink=10.140.1.14:1
 
 see [here](http://alomax.free.fr/seisgram/ver70/SeisGram2KHelp.html) for a detailed list of launch parameters
 
-(under development)
-
 ## Example
 ### Quick run
 SeisGram2k version:
