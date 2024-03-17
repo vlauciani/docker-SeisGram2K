@@ -27,6 +27,9 @@ SeisGram2K Seismogram Viewer is an easy-to-use, platform-independent, Java softw
 More info here:
 - http://alomax.free.fr/seisgram/SeisGram2K.html
 
+More info about SeisGram2k:
+- https://gitlab.rm.ingv.it/uf/doc/-/wikis/manuali/seisgram2k
+
 ### Build docker
 ```
 $ git clone git@gitlab.rm.ingv.it:docker/SeisGram2K.git
