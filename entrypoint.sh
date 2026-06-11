@@ -81,9 +81,18 @@ fetch_info() {
 }
 
 # Print one "NET_STA" per line (sorted, unique) from an INFO STREAMS dump ($1).
+# The "name" and "network" attributes are extracted independently of their
+# position in the <station> tag: some servers (e.g. Nanometrics Centaur) emit
+# them after other attributes like begin_seq/description/end_seq, so a regex
+# that assumes "<station name=... network=..." adjacency matches nothing.
 parse_netsta() {
-    grep -aoE '<station name="[A-Z0-9_]+" network="[A-Z0-9]+"' "$1" \
-        | sed -E 's/.*name="([^"]+)" network="([^"]+)"/\2_\1/' | sort -u || true
+    grep -aoE '<station[^>]*>' "$1" \
+        | awk '{
+            net=""; sta="";
+            if (match($0, /[[:space:]]network="[A-Z0-9]+"/)) net=substr($0,RSTART+10,RLENGTH-11);
+            if (match($0, /[[:space:]]name="[A-Z0-9_]+"/))   sta=substr($0,RSTART+7,RLENGTH-8);
+            if (net!="" && sta!="") print net"_"sta;
+          }' | sort -u || true
 }
 
 # List every station with its channels, then exit. Triggered by LIST_STREAMS.
@@ -91,11 +100,25 @@ list_streams() {
     local TMP; TMP="$(mktemp)"
     echo "Listing streams available on ${SEEDLINK_HOST} ..." >&2
     fetch_info "${TMP}"
-    grep -aoE '<station name="[A-Z0-9_]+" network="[A-Z0-9]+"|seedname="[A-Z0-9?]+"' "${TMP}" \
-        | sed -E 's/<station name="([A-Z0-9_]+)" network="([A-Z0-9]+)"/S \2_\1/; s/seedname="([A-Z0-9?]+)"/C \1/' \
-        | awk '$1=="S"{cur=$2; if(!(cur in seen)){seen[cur]=1; order[++n]=cur}}
-               $1=="C"&&cur!=""{k=cur"|"$2; if(!(k in ck)){ck[k]=1; ch[cur]=ch[cur]" "$2}}
-               END{for(i=1;i<=n;i++) print "  "order[i]":"ch[order[i]]}'
+    # Walk the <station>/<stream> tags in document order, extracting name and
+    # network independently of attribute order (see parse_netsta) and grouping
+    # each station's channels (seedname) under it.
+    grep -aoE '<station[^>]*>|seedname="[A-Z0-9?]+"' "${TMP}" \
+        | awk '
+            /^<station/ {
+                net=""; sta="";
+                if (match($0, /[[:space:]]network="[A-Z0-9]+"/)) net=substr($0,RSTART+10,RLENGTH-11);
+                if (match($0, /[[:space:]]name="[A-Z0-9_]+"/))   sta=substr($0,RSTART+7,RLENGTH-8);
+                cur=net"_"sta;
+                if (cur!="_" && !(cur in seen)){seen[cur]=1; order[++n]=cur}
+                next
+            }
+            /^seedname/ {
+                if (cur=="_"||cur=="") next;
+                c=$0; sub(/^seedname="/,"",c); sub(/"$/,"",c);
+                k=cur"|"c; if(!(k in ck)){ck[k]=1; ch[cur]=ch[cur]" "c}
+            }
+            END{for(i=1;i<=n;i++) print "  "order[i]":"ch[order[i]]}'
     rm -f "${TMP}"
     echo "" >&2
     echo "Set STREAMS to a comma-separated list of NET_STA:CHAN?, e.g.:" >&2

@@ -24,8 +24,14 @@ RUN apt-get update \
         procps \
     && rm -rf /var/lib/apt/lists/*
 
-# Make http://localhost:8080/ open the noVNC client directly.
-RUN ln -sf /usr/share/novnc/vnc.html /usr/share/novnc/index.html
+# Make http://localhost:8080/ open the noVNC client and connect immediately,
+# skipping the landing page with the "Connect" button. autoconnect starts the
+# session on load; resize=remote keeps the SeisGram2K window fit to the browser;
+# reconnect re-establishes the session if the websocket drops.
+RUN printf '%s\n' \
+    '<!doctype html>' \
+    '<meta http-equiv="refresh" content="0; url=vnc.html?autoconnect=true&resize=remote&reconnect=true">' \
+    > /usr/share/novnc/index.html
 
 # Set .bashrc
 RUN echo "" >> /root/.bashrc \
