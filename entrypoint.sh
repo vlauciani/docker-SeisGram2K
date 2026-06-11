@@ -11,6 +11,14 @@
 #     -e STREAMS="MN_AQU:HH?,IV_ROM9:HN?" \
 #     seisgram2k70
 #
+# STREAMS is optional: if it is omitted, the entrypoint asks the server which
+# streams it offers and watches all channels of every station (up to
+# MAX_AUTO_STATIONS). Convenient for small, single-station servers:
+#
+#   docker run --rm -p 8080:8080 \
+#     -e SEEDLINK_HOST=basiluzzo.dyn.ingv.it:18000 \
+#     seisgram2k70
+#
 # then open http://localhost:8080 in a browser.
 #
 set -euo pipefail
@@ -27,6 +35,15 @@ VNC_RESOLUTION="${VNC_RESOLUTION:-1440x900}"
 # at startup: resizing the window afterwards (e.g. via a window manager) leaves
 # the Swing content blank under Xvfb, so no window manager is used.
 DISPLAY_SIZE="${DISPLAY_SIZE:-1.0,1.0}"
+# Used only when STREAMS is empty (auto-discovery): channel selector applied to
+# every discovered station ("???" = all channels), and the maximum number of
+# stations to auto-load before refusing (to avoid flooding the viewer).
+AUTO_CHANNELS="${AUTO_CHANNELS:-???}"
+MAX_AUTO_STATIONS="${MAX_AUTO_STATIONS:-10}"
+# If set to any non-empty value, list the streams (stations + channels) offered
+# by SEEDLINK_HOST and exit, instead of launching the viewer. Lets the user pick
+# a STREAMS value before starting.
+LIST_STREAMS="${LIST_STREAMS:-}"
 
 readonly DISPLAY_NUM=":0"
 readonly VNC_PORT=5900
@@ -34,14 +51,94 @@ readonly NOVNC_PORT=8080
 export DISPLAY="${DISPLAY_NUM}"
 
 # --- Validation --------------------------------------------------------------
-if [[ -z "${SEEDLINK_HOST}" || -z "${STREAMS}" ]]; then
-    echo "ERROR: SEEDLINK_HOST and STREAMS must be set." >&2
+if [[ -z "${SEEDLINK_HOST}" ]]; then
+    echo "ERROR: SEEDLINK_HOST must be set (host:port)." >&2
     echo "Example:" >&2
     echo "  docker run --rm -p 8080:8080 \\" >&2
     echo "    -e SEEDLINK_HOST=hsl.int.ingv.it:18000 \\" >&2
     echo "    -e STREAMS=\"MN_AQU:HH?,IV_ROM9:HN?\" \\" >&2
     echo "    seisgram2k70" >&2
     exit 1
+fi
+if [[ "${SEEDLINK_HOST}" != *:* ]]; then
+    echo "ERROR: SEEDLINK_HOST must be in 'host:port' form, got '${SEEDLINK_HOST}'." >&2
+    exit 1
+fi
+
+# Connect to SEEDLINK_HOST, request the stream inventory (INFO STREAMS) and
+# write the raw response to the file given as $1.
+fetch_info() {
+    local OUT="$1"
+    local HOST="${SEEDLINK_HOST%:*}"
+    local PORT="${SEEDLINK_HOST##*:}"
+    if ! exec 3<>"/dev/tcp/${HOST}/${PORT}"; then
+        echo "ERROR: cannot connect to SeedLink server ${SEEDLINK_HOST}." >&2
+        exit 1
+    fi
+    printf 'HELLO\r\nINFO STREAMS\r\n' >&3
+    timeout 8 cat <&3 > "${OUT}" || true
+    exec 3>&- 3<&- || true
+}
+
+# Print one "NET_STA" per line (sorted, unique) from an INFO STREAMS dump ($1).
+parse_netsta() {
+    grep -aoE '<station name="[A-Z0-9_]+" network="[A-Z0-9]+"' "$1" \
+        | sed -E 's/.*name="([^"]+)" network="([^"]+)"/\2_\1/' | sort -u || true
+}
+
+# List every station with its channels, then exit. Triggered by LIST_STREAMS.
+list_streams() {
+    local TMP; TMP="$(mktemp)"
+    echo "Listing streams available on ${SEEDLINK_HOST} ..." >&2
+    fetch_info "${TMP}"
+    grep -aoE '<station name="[A-Z0-9_]+" network="[A-Z0-9]+"|seedname="[A-Z0-9?]+"' "${TMP}" \
+        | sed -E 's/<station name="([A-Z0-9_]+)" network="([A-Z0-9]+)"/S \2_\1/; s/seedname="([A-Z0-9?]+)"/C \1/' \
+        | awk '$1=="S"{cur=$2; if(!(cur in seen)){seen[cur]=1; order[++n]=cur}}
+               $1=="C"&&cur!=""{k=cur"|"$2; if(!(k in ck)){ck[k]=1; ch[cur]=ch[cur]" "$2}}
+               END{for(i=1;i<=n;i++) print "  "order[i]":"ch[order[i]]}'
+    rm -f "${TMP}"
+    echo "" >&2
+    echo "Set STREAMS to a comma-separated list of NET_STA:CHAN?, e.g.:" >&2
+    echo "  -e STREAMS=\"MN_AQU:HH?,IV_INTR:HH?\"" >&2
+}
+
+# Build a "NET_STA:???,..." selector for every station, when STREAMS is empty.
+discover_streams() {
+    local TMP NETSTA COUNT
+    echo "STREAMS not set: discovering streams from ${SEEDLINK_HOST} ..." >&2
+    TMP="$(mktemp)"
+    fetch_info "${TMP}"
+    NETSTA="$(parse_netsta "${TMP}")"
+    rm -f "${TMP}"
+
+    COUNT="$(printf '%s\n' "${NETSTA}" | grep -c . || true)"
+    if [[ "${COUNT}" -eq 0 ]]; then
+        echo "ERROR: no streams discovered on ${SEEDLINK_HOST}. Set STREAMS explicitly." >&2
+        exit 1
+    fi
+    if [[ "${COUNT}" -gt "${MAX_AUTO_STATIONS}" ]]; then
+        echo "ERROR: discovered ${COUNT} stations on ${SEEDLINK_HOST} (limit MAX_AUTO_STATIONS=${MAX_AUTO_STATIONS})." >&2
+        echo "Loading them all would overwhelm the viewer. Pick from the stations below and" >&2
+        echo "set STREAMS explicitly (e.g. -e STREAMS=\"NET_STA:HH?\"), or raise MAX_AUTO_STATIONS." >&2
+        echo "" >&2
+        echo "Available stations (showing up to 50; use -e LIST_STREAMS=1 for stations+channels):" >&2
+        printf '%s\n' "${NETSTA}" | head -50 | sed -E 's/^/  /' >&2
+        if [[ "${COUNT}" -gt 50 ]]; then
+            echo "  ... and $((COUNT - 50)) more" >&2
+        fi
+        exit 1
+    fi
+    STREAMS="$(printf '%s\n' "${NETSTA}" | sed -E "s/\$/:${AUTO_CHANNELS}/" | paste -sd, -)"
+    echo "Discovered ${COUNT} station(s): ${STREAMS}" >&2
+}
+
+if [[ -n "${LIST_STREAMS}" ]]; then
+    list_streams
+    exit 0
+fi
+
+if [[ -z "${STREAMS}" ]]; then
+    discover_streams
 fi
 
 # Assemble the SeisGram2K -seedlink argument:

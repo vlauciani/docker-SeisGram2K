@@ -5,14 +5,10 @@
 - [SeisGram2K](#seisgram2k)
   - [Quickstart](#quickstart)
     - [Build docker](#build-docker)
-  - [Run docker (Mac OSX)](#run-docker-mac-osx)
-    - [XQuartz](#xquartz)
-    - [Quick Run](#quick-run)
-    - [Run by your self](#run-by-your-self)
-  - [Run docker (Linux)](#run-docker-linux)
-  - [Example](#example)
-    - [Quick run](#quick-run)
-    - [Run by your self](#run-by-your-self-1)
+    - [Run docker (browser, plug-and-play)](#run-docker-browser-plug-and-play)
+      - [Environment variables](#environment-variables)
+      - [Stream selector syntax](#stream-selector-syntax)
+    - [Run docker (Linux)](#run-docker-linux)
 - [Contribute](#contribute)
 - [Credit](#credit)
 
@@ -53,11 +49,36 @@ Then open the viewer in your browser:
 
 Waveforms flow in near-realtime as SeedLink packets arrive.
 
+`STREAMS` is optional. If you omit it, the container asks the server which
+streams it offers and watches all channels of every station automatically -
+handy for small, single-station servers:
+```
+$ docker run --rm -p 8080:8080 \
+    -e SEEDLINK_HOST=basiluzzo.dyn.ingv.it:18000 \
+    seisgram2k70
+```
+To protect the viewer, auto-discovery refuses to load more than
+`MAX_AUTO_STATIONS` (default 10); point at a large server (e.g. `hsl`) only with
+an explicit `STREAMS`, or raise the limit. When the limit is exceeded the error
+lists the stations found so you can choose.
+
+To inspect a server before choosing, list its stations and channels (then exit)
+with `LIST_STREAMS`:
+```
+$ docker run --rm -e SEEDLINK_HOST=discovery.ingv.it:39962 -e LIST_STREAMS=1 seisgram2k70
+  IV_INTR: BHE BHN BHZ HHN HHZ HNE HNN HNZ LHE LHN LHZ
+  MN_AQU:  BHE BHN BHZ HHE HHN HHZ HNE HNN HNZ ...
+  ...
+```
+
 #### Environment variables
 | Variable          | Required | Default            | Description                                                        |
 |-------------------|----------|--------------------|--------------------------------------------------------------------|
 | `SEEDLINK_HOST`   | yes      | -                  | SeedLink server as `host:port` (e.g. `hsl.int.ingv.it:18000`)      |
-| `STREAMS`         | yes      | -                  | Comma-separated `NET_STA:CHAN?` selectors (e.g. `IV_AQU:HH?`)      |
+| `STREAMS`         | no       | -                  | Comma-separated `NET_STA:CHAN?` selectors (e.g. `MN_AQU:HH?`). If empty, streams are auto-discovered |
+| `MAX_AUTO_STATIONS` | no     | `10`               | Max stations to auto-load when `STREAMS` is empty (safety limit)   |
+| `AUTO_CHANNELS`   | no       | `???`              | Channel selector applied to each auto-discovered station (`???` = all) |
+| `LIST_STREAMS`    | no       | -                  | If set, list the server's stations + channels and exit (don't launch) |
 | `REALTIME_UPDATE` | no       | `5.0`              | Display refresh interval, in seconds                               |
 | `VNC_RESOLUTION`  | no       | `1440x900`         | Virtual display / browser canvas size                              |
 | `DISPLAY_SIZE`    | no       | `1.0,1.0`          | Main window size at startup, as `horizontal,vertical` screen fraction |
