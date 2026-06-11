@@ -24,13 +24,46 @@ RUN apt-get update \
         procps \
     && rm -rf /var/lib/apt/lists/*
 
-# Make http://localhost:8080/ open the noVNC client and connect immediately,
-# skipping the landing page with the "Connect" button. autoconnect starts the
-# session on load; resize=remote keeps the SeisGram2K window fit to the browser;
-# reconnect re-establishes the session if the websocket drops.
+# Make http://localhost:8080/ open the noVNC client directly: a wrapper page
+# puts the INGV logo in a dedicated top bar and embeds the auto-connecting
+# noVNC client (no "Connect" landing button) in an iframe below it, so the logo
+# never overlaps the SeisGram2K window.
+#   autoconnect=true : start the session on load, skipping the Connect button
+#   resize=scale     : keep the remote framebuffer at its native resolution
+#                      (VNC_RESOLUTION, where the SeisGram2K window already fills
+#                      it) and scale the image to the iframe, instead of growing
+#                      the framebuffer and leaving grey desktop around the
+#                      fixed-size window. Raise VNC_RESOLUTION for a sharper,
+#                      higher-detail view (smaller relative UI).
+#   reconnect=true   : re-establish the session if the websocket drops
+COPY ingv-logo.png /usr/share/novnc/ingv-logo.png
 RUN printf '%s\n' \
     '<!doctype html>' \
-    '<meta http-equiv="refresh" content="0; url=vnc.html?autoconnect=true&resize=remote&reconnect=true">' \
+    '<html>' \
+    '<head>' \
+    '<meta charset="utf-8">' \
+    '<title>SeisGram2K SeedLink Monitor</title>' \
+    '<style>' \
+    '  html,body{margin:0;height:100%;background:#000;overflow:hidden}' \
+    '  body{display:flex;flex-direction:column}' \
+    '  #bar{flex:0 0 auto;height:56px;background:#0b0b0b;display:flex;' \
+    '       align-items:center;gap:12px;padding:0 14px;' \
+    '       border-bottom:1px solid #222}' \
+    '  #bar img{height:40px;width:auto}' \
+    '  #bar span{color:#ccc;font:600 15px system-ui,sans-serif;' \
+    '            letter-spacing:.3px}' \
+    '  iframe{flex:1 1 auto;border:0;width:100%;display:block}' \
+    '</style>' \
+    '</head>' \
+    '<body>' \
+    '  <div id="bar">' \
+    '    <img src="ingv-logo.png" alt="INGV"' \
+    '         onerror="this.style.display='"'"'none'"'"'">' \
+    '    <span>SeisGram2K &mdash; SeedLink Monitor</span>' \
+    '  </div>' \
+    '  <iframe src="vnc.html?autoconnect=true&resize=scale&reconnect=true"></iframe>' \
+    '</body>' \
+    '</html>' \
     > /usr/share/novnc/index.html
 
 # Set .bashrc

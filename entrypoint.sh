@@ -29,7 +29,7 @@ STREAMS="${STREAMS:-}"
 REALTIME_UPDATE="${REALTIME_UPDATE:-5.0}"
 SEEDLINK_BUFFER="${SEEDLINK_BUFFER:-1200#25000#25000}"
 SEEDLINK_GROUPCHANNELS="${SEEDLINK_GROUPCHANNELS:-YES}"
-VNC_RESOLUTION="${VNC_RESOLUTION:-1440x900}"
+VNC_RESOLUTION="${VNC_RESOLUTION:-1920x1080}"
 # Main window size at startup, as horizontal,vertical fraction of the screen.
 # 1.0,1.0 makes SeisGram2K fill the virtual display natively. This must be set
 # at startup: resizing the window afterwards (e.g. via a window manager) leaves
