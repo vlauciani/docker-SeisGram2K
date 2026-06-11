@@ -1,32 +1,47 @@
-FROM debian:jessie
+FROM eclipse-temurin:17-jre
 
-MAINTAINER Valentino Lauciani <valentino.lauciani@ingv.it>
+LABEL maintainer="Valentino Lauciani <valentino.lauciani@ingv.it>"
 
 ENV DEBIAN_FRONTEND=noninteractive
-ENV INITRD No
-ENV FAKE_CHROOT 1
+ENV INITRD=No
+ENV FAKE_CHROOT=1
 
 RUN apt-get update \
     && apt-get dist-upgrade -y --no-install-recommends \
-    && apt-get install -y \
+    && apt-get install -y --no-install-recommends \
         build-essential \
         vim \
-	git \
-	telnet \
+        git \
+        telnet \
         dnsutils \
         wget \
-	default-jre
+        ca-certificates \
+        xvfb \
+        x11vnc \
+        x11-utils \
+        novnc \
+        websockify \
+        procps \
+    && rm -rf /var/lib/apt/lists/*
+
+# Make http://localhost:8080/ open the noVNC client directly.
+RUN ln -sf /usr/share/novnc/vnc.html /usr/share/novnc/index.html
 
 # Set .bashrc
 RUN echo "" >> /root/.bashrc \
      && echo "alias ll='ls -l --color'" >> /root/.bashrc \
      && . /root/.bashrc
 
-# Install SeisGram2K
+# Install SeisGram2K (vendored from http://alomax.free.fr/seisgram/)
 WORKDIR /opt
-RUN wget "http://alomax.free.fr/seisgram/beta/SeisGram2K70.jar" \
-     && chmod +x /opt/SeisGram2K70.jar 
+COPY SeisGram2K70.jar /opt/SeisGram2K70.jar
+RUN chmod +x /opt/SeisGram2K70.jar
 
 ENV CLASSPATH=/opt/SeisGram2K70.jar
 
-ENTRYPOINT ["java", "net.alomax.seisgram2k.SeisGram2K"]
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
+EXPOSE 8080
+
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
