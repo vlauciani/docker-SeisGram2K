@@ -37,6 +37,7 @@ WORKDIR /opt
 COPY SeisGram2K70.jar /opt/SeisGram2K70.jar
 RUN chmod +x /opt/SeisGram2K70.jar
 
+COPY ./test.sh /opt/
 ENV CLASSPATH=/opt/SeisGram2K70.jar
 
 COPY entrypoint.sh /usr/local/bin/entrypoint.sh

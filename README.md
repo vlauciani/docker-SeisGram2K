@@ -1,4 +1,24 @@
-# docker_SeisGram2K
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+**Table of Contents**  *generated with [DocToc](https://github.com/thlorenz/doctoc)*
+
+- [SeisGram2K](#seisgram2k)
+  - [Quickstart](#quickstart)
+    - [Build docker](#build-docker)
+  - [Run docker (Mac OSX)](#run-docker-mac-osx)
+    - [XQuartz](#xquartz)
+    - [Quick Run](#quick-run)
+    - [Run by your self](#run-by-your-self)
+  - [Run docker (Linux)](#run-docker-linux)
+  - [Example](#example)
+    - [Quick run](#quick-run)
+    - [Run by your self](#run-by-your-self-1)
+- [Contribute](#contribute)
+- [Credit](#credit)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
+# SeisGram2K
 
 SeisGram2K SeedLink Monitor in a Docker container, viewable in a web browser.
 
